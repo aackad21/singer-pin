@@ -1,0 +1,26 @@
+name: One-time mirror of pinterest/singer
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror all upstream branches and tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --mirror https://github.com/pinterest/singer.git upstream.git
+          cd upstream.git
+          git remote add target "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force --prune target 'refs/heads/*:refs/heads/*'
+          git push --force --prune target 'refs/tags/*:refs/tags/*'
